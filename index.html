@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Treino">
+<title>Registro de Treino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101214;
+    --surface:#1C1F24;
+    --surface-2:#262A31;
+    --border:#33383F;
+    --text-hi:#F5F6F8;
+    --text-lo:#9AA1AC;
+    --accent:#E8B923;
+    --accent-dim:#5C4D14;
+    --good:#4CAF7D;
+    --bad:#E5484D;
+    --radius:14px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text-hi);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  h1,h2,h3,.display{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.03em;}
+  .num{font-family:'JetBrains Mono',monospace;font-weight:700;}
+  #app{
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh;
+    padding-top:calc(var(--safe-top) + 14px);
+    padding-bottom:calc(var(--safe-bottom) + 84px);
+    position:relative;
+  }
+  .screen{display:none;padding:0 16px;}
+  .screen.active{display:block;animation:fade .18s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+  header.top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px 12px;
+  }
+  header.top h1{font-size:20px;margin:0;color:var(--text-hi);}
+  header.top .sub{font-size:12px;color:var(--text-lo);text-transform:none;letter-spacing:0;font-family:'Inter',sans-serif;}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .card h3{font-size:14px;margin:0 0 10px;color:var(--text-lo);letter-spacing:0.08em;}
+
+  label{display:block;font-size:12px;color:var(--text-lo);margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.05em;}
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    color:var(--text-hi);
+    font-size:16px;
+    padding:11px 12px;
+    font-family:'Inter',sans-serif;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .row{display:flex;gap:8px;}
+  .row > *{flex:1;min-width:0;}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    border-radius:10px;
+    border:none;
+    padding:12px 14px;
+    min-height:44px;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--accent);color:#1A1200;width:100%;}
+  .btn-primary:active{opacity:0.85;}
+  .btn-secondary{background:var(--surface-2);color:var(--text-hi);border:1px solid var(--border);width:100%;}
+  .btn-ghost{background:transparent;color:var(--accent);border:1px dashed var(--accent-dim);width:100%;}
+  .btn-danger{background:transparent;color:var(--bad);border:1px solid #4a2224;}
+  .btn-small{padding:8px 10px;min-height:36px;font-size:13px;width:auto;}
+  .stepper{display:flex;align-items:center;gap:8px;}
+  .stepper button{width:44px;height:44px;font-size:20px;background:var(--surface-2);color:var(--text-hi);border:1px solid var(--border);flex:none;}
+  .stepper input{text-align:center;}
+
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text-lo) 50%),linear-gradient(135deg,var(--text-lo) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+
+  nav.tabbar{
+    position:fixed;bottom:0;left:0;right:0;
+    display:flex;
+    background:rgba(20,22,26,0.92);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--border);
+    padding-bottom:var(--safe-bottom);
+    max-width:520px;margin:0 auto;
+  }
+  nav.tabbar button{
+    flex:1;background:none;border:none;color:var(--text-lo);
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:10px 4px 8px;border-radius:0;font-weight:500;font-size:11px;
+    text-transform:uppercase;letter-spacing:0.04em;
+  }
+  nav.tabbar button.active{color:var(--accent);}
+  nav.tabbar svg{width:22px;height:22px;}
+
+  .empty{
+    text-align:center;color:var(--text-lo);padding:30px 10px;font-size:14px;
+  }
+  .empty .btn-ghost{margin-top:12px;}
+
+  /* barbell signature element */
+  .barbell{display:flex;align-items:center;justify-content:center;gap:2px;height:54px;margin:6px 0 2px;}
+  .barbell .sleeve{width:36px;height:6px;background:var(--border);border-radius:2px;}
+  .barbell .plates{display:flex;gap:2px;align-items:center;}
+  .plate{width:8px;border-radius:2px;background:var(--accent-dim);transition:all .25s ease;}
+  .plate.filled{background:var(--accent);}
+  .plate.h1{height:20px;} .plate.h2{height:32px;} .plate.h3{height:44px;}
+  .barbell .bar-center{width:4px;height:4px;background:var(--text-lo);border-radius:50%;}
+
+  .exercise-block{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;background:var(--surface-2);}
+  .exercise-block .ex-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .exercise-block .ex-title strong{font-size:15px;}
+  .set-row{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--text-lo);padding:6px 0;border-top:1px dashed var(--border);}
+  .set-row:first-of-type{border-top:none;}
+  .set-row .num{color:var(--text-hi);}
+  .badge{font-size:10px;background:var(--accent-dim);color:var(--accent);padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:0.04em;}
+
+  .day-pill{display:inline-flex;padding:8px 14px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-lo);font-size:13px;font-weight:600;margin:0 6px 6px 0;}
+  .day-pill.active{background:var(--accent);color:#1A1200;border-color:var(--accent);}
+  .pill-row{display:flex;flex-wrap:wrap;overflow-x:auto;padding-bottom:2px;}
+
+  .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--good);color:#08210F;font-weight:700;font-size:13px;padding:10px 18px;border-radius:30px;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  .chart-wrap{width:100%;overflow:hidden;}
+  svg.chart{width:100%;height:180px;display:block;}
+  .grid-line{stroke:var(--border);stroke-width:1;}
+  .chart-line{fill:none;stroke:var(--accent);stroke-width:2.5;}
+  .chart-dot{fill:var(--accent);}
+  .chart-label{font-size:9px;fill:var(--text-lo);font-family:'JetBrains Mono',monospace;}
+
+  table.hist{width:100%;border-collapse:collapse;font-size:13px;}
+  table.hist th{text-align:left;color:var(--text-lo);font-weight:600;font-size:11px;text-transform:uppercase;padding:6px 4px;border-bottom:1px solid var(--border);}
+  table.hist td{padding:7px 4px;border-bottom:1px solid var(--border);}
+  table.hist tr:last-child td{border-bottom:none;}
+
+  .seg{display:flex;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);overflow:hidden;}
+  .seg button{flex:1;background:none;color:var(--text-lo);border-radius:0;min-height:40px;}
+  .seg button.active{background:var(--accent);color:#1A1200;}
+
+  .field-optional-tag{color:var(--text-lo);font-weight:400;font-size:10px;text-transform:none;}
+  .loading{text-align:center;color:var(--text-lo);padding:40px 0;font-size:13px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TREINO -->
+  <div class="screen active" id="screen-treino">
+    <header class="top">
+      <div>
+        <h1>Treino</h1>
+        <div class="sub" id="treino-sub">Carregando…</div>
+      </div>
+    </header>
+    <div id="treino-content"><div class="loading">Carregando…</div></div>
+  </div>
+
+  <!-- PLANO -->
+  <div class="screen" id="screen-plano">
+    <header class="top">
+      <div>
+        <h1>Plano</h1>
+        <div class="sub">Ciclos de periodização</div>
+      </div>
+    </header>
+    <div id="plano-content"><div class="loading">Carregando…</div></div>
+  </div>
+
+  <!-- EVOLUÇÃO -->
+  <div class="screen" id="screen-evolucao">
+    <header class="top">
+      <div>
+        <h1>Evolução</h1>
+        <div class="sub">Cargas e medidas ao longo do tempo</div>
+      </div>
+    </header>
+    <div id="evolucao-content"><div class="loading">Carregando…</div></div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="screen" id="screen-perfil">
+    <header class="top">
+      <div>
+        <h1>Perfil</h1>
+        <div class="sub">Anamnese e medidas corporais</div>
+      </div>
+    </header>
+    <div id="perfil-content"><div class="loading">Carregando…</div></div>
+  </div>
+
+  <nav class="tabbar">
+    <button data-tab="treino" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5l11 11M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M4.5 19.5l2-2M17.5 6.5l2-2"/><rect x="2" y="9" width="4" height="6" rx="1"/><rect x="18" y="9" width="4" height="6" rx="1"/></svg>
+      Treino
+    </button>
+    <button data-tab="plano">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      Plano
+    </button>
+    <button data-tab="evolucao">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/></svg>
+      Evolução
+    </button>
+    <button data-tab="perfil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.5-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
+      Perfil
+    </button>
+  </nav>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- Storage helpers (localStorage do Safari, salva no aparelho) ---------------- */
+const STORAGE_PREFIX = 'treino_app_';
+async function loadData(key, fallback){
+  try{
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){
+    console.error('Erro ao carregar', key, e);
+    return fallback;
+  }
+}
+async function saveData(key, value){
+  try{
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+    return true;
+  }catch(e){
+    console.error('Erro ao salvar', key, e);
+    toast('Erro ao salvar. Espaço cheio?');
+    return false;
+  }
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._h);
+  toast._h = setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+/* ---------------- App state ---------------- */
+const state = {
+  ciclos: [],      // {id, nome, dataInicio, ativo, dias:[{id,nome,exercicios:[{id,nome,seriesPrevistas,repsPrevistas}]}]}
+  registros: [],    // {id, cicloId, diaId, diaNome, exercicio, data, series:[{numero,peso,reps,cadencia,descanso}]}
+  anamnese: [],     // {id, data, cicloId, cicloNome, sexo, campos:{...}}
+  ui: { treinoCicloId:null, treinoDiaId:null, tab:'treino' }
+};
+
+const MEDIDAS = [
+  {k:'peso', label:'Peso', unit:'kg'},
+  {k:'altura', label:'Altura', unit:'cm'},
+  {k:'peitoral', label:'Peitoral / Busto', unit:'cm'},
+  {k:'cintura', label:'Cintura', unit:'cm'},
+  {k:'abdomen', label:'Abdômen', unit:'cm'},
+  {k:'quadril', label:'Quadril', unit:'cm'},
+  {k:'bracoDrelax', label:'Braço Direito Relaxado', unit:'cm'},
+  {k:'bracoErelax', label:'Braço Esquerdo Relaxado', unit:'cm'},
+  {k:'bracoDcontr', label:'Braço Direito Contraído', unit:'cm'},
+  {k:'bracoEcontr', label:'Braço Esquerdo Contraído', unit:'cm'},
+  {k:'antebracoD', label:'Antebraço Direito', unit:'cm'},
+  {k:'antebracoE', label:'Antebraço Esquerdo', unit:'cm'},
+  {k:'coxaD', label:'Coxa Direita', unit:'cm'},
+  {k:'coxaE', label:'Coxa Esquerda', unit:'cm'},
+  {k:'panturrilhaD', label:'Panturrilha Direita', unit:'cm'},
+  {k:'panturrilhaE', label:'Panturrilha Esquerda', unit:'cm'},
+];
+
+async function init(){
+  const [ciclos, registros, anamnese] = await Promise.all([
+    loadData('ciclos', []),
+    loadData('registros', []),
+    loadData('anamnese', [])
+  ]);
+  state.ciclos = ciclos;
+  state.registros = registros;
+  state.anamnese = anamnese;
+  const ativo = state.ciclos.find(c=>c.ativo);
+  state.ui.treinoCicloId = ativo ? ativo.id : (state.ciclos[0] ? state.ciclos[0].id : null);
+  if(state.ui.treinoCicloId){
+    const c = state.ciclos.find(x=>x.id===state.ui.treinoCicloId);
+    state.ui.treinoDiaId = c && c.dias[0] ? c.dias[0].id : null;
+  }
+  renderAll();
+}
+
+function renderAll(){
+  renderTreino();
+  renderPlano();
+  renderEvolucao();
+  renderPerfil();
+}
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll('nav.tabbar button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('screen-'+btn.dataset.tab).classList.add('active');
+    state.ui.tab = btn.dataset.tab;
+    if(btn.dataset.tab==='evolucao') renderEvolucao();
+  });
+});
+
+/* ================= TREINO ================= */
+function cicloAtivoObj(){
+  return state.ciclos.find(c=>c.id===state.ui.treinoCicloId) || null;
+}
+
+function renderTreino(){
+  const wrap = document.getElementById('treino-content');
+  const sub = document.getElementById('treino-sub');
+  const ciclo = cicloAtivoObj();
+
+  if(!state.ciclos.length){
+    sub.textContent = 'Nenhum ciclo criado';
+    wrap.innerHTML = `<div class="empty">Você ainda não tem um plano de treino.<br>Crie um ciclo na aba <strong>Plano</strong> para começar a registrar.
+      <button class="btn-ghost" onclick="goTab('plano')">Ir para Plano</button></div>`;
+    return;
+  }
+  if(!ciclo){ state.ui.treinoCicloId = state.ciclos[0].id; return renderTreino(); }
+  sub.textContent = ciclo.nome;
+
+  if(!ciclo.dias.length){
+    wrap.innerHTML = `<div class="empty">Esse ciclo ainda não tem dias cadastrados.
+      <button class="btn-ghost" onclick="goTab('plano')">Configurar dias</button></div>`;
+    return;
+  }
+  if(!state.ui.treinoDiaId || !ciclo.dias.find(d=>d.id===state.ui.treinoDiaId)){
+    state.ui.treinoDiaId = ciclo.dias[0].id;
+  }
+  const dia = ciclo.dias.find(d=>d.id===state.ui.treinoDiaId);
+
+  let html = '';
+  // seletor de ciclo se houver mais de um
+  if(state.ciclos.length>1){
+    html += `<select id="sel-ciclo-treino" style="margin-bottom:10px;">`;
+    state.ciclos.forEach(c=> html += `<option value="${c.id}" ${c.id===ciclo.id?'selected':''}>${escapeHtml(c.nome)}</option>`);
+    html += `</select>`;
+  }
+  // pills de dias
+  html += `<div class="pill-row" id="dia-pills">`;
+  ciclo.dias.forEach(d=>{
+    html += `<button class="day-pill ${d.id===dia.id?'active':''}" data-dia="${d.id}">${escapeHtml(d.nome)}</button>`;
+  });
+  html += `</div>`;
+
+  const registrosHoje = state.registros.filter(r=>r.cicloId===ciclo.id && r.diaId===dia.id && r.data===todayISO());
+
+  dia.exercicios.forEach(ex=>{
+    const reg = registrosHoje.find(r=>r.exercicioId===ex.id);
+    const seriesFeitas = reg ? reg.series.length : 0;
+    const previstas = ex.seriesPrevistas || 0;
+    html += `<div class="exercise-block" data-exid="${ex.id}">
+      <div class="ex-title">
+        <strong>${escapeHtml(ex.nome)}</strong>
+        <span class="badge">${seriesFeitas}/${previstas||'?'} séries</span>
+      </div>
+      ${previstas ? barbellHTML(seriesFeitas, previstas) : ''}
+      ${ex.repsPrevistas ? `<div style="font-size:12px;color:var(--text-lo);margin-bottom:6px;">Alvo: ${previstas||'?'} séries x ${escapeHtml(String(ex.repsPrevistas))} reps</div>` : ''}
+      ${(reg&&reg.series.length) ? renderSeriesList(reg.series) : ''}
+      <button class="btn-primary btn-small" style="margin-top:6px;" onclick="abrirRegistroSerie('${ciclo.id}','${dia.id}','${ex.id}', ${seriesFeitas+1})">+ Registrar série ${seriesFeitas+1}</button>
+    </div>`;
+  });
+
+  html += `<button class="btn-ghost" onclick="abrirExercicioAvulso('${ciclo.id}','${dia.id}')">+ Exercício avulso (fora do plano)</button>`;
+
+  // exercícios avulsos já registrados hoje que não estão no plano do dia
+  const idsPlano = new Set(dia.exercicios.map(e=>e.id));
+  const avulsos = registrosHoje.filter(r=>!idsPlano.has(r.exercicioId));
+  avulsos.forEach(reg=>{
+    html += `<div class="exercise-block">
+      <div class="ex-title"><strong>${escapeHtml(reg.exercicio)}</strong><span class="badge">avulso</span></div>
+      ${renderSeriesList(reg.series)}
+      <button class="btn-primary btn-small" style="margin-top:6px;" onclick="abrirRegistroSerieAvulso('${ciclo.id}','${dia.id}','${reg.exercicioId}','${escapeAttr(reg.exercicio)}', ${reg.series.length+1})">+ Registrar série ${reg.series.length+1}</button>
+    </div>`;
+  });
+
+  wrap.innerHTML = html;
+
+  const selCiclo = document.getElementById('sel-ciclo-treino');
+  if(selCiclo) selCiclo.addEventListener('change', e=>{
+    state.ui.treinoCicloId = e.target.value;
+    state.ui.treinoDiaId = null;
+    renderTreino();
+  });
+  document.querySelectorAll('#dia-pills .day-pill').forEach(p=>{
+    p.addEventListener('click', ()=>{ state.ui.treinoDiaId = p.dataset.dia; renderTreino(); });
+  });
+}
+
+function barbellHTML(feitas, previstas){
+  let plates = '';
+  const total = Math.max(previstas, feitas);
+  for(let i=0;i<total;i++){
+    const h = (i%3===0)?'h3':(i%3===1?'h2':'h1');
+    plates += `<div class="plate ${h} ${i<feitas?'filled':''}"></div>`;
+  }
+  return `<div class="barbell"><div class="sleeve"></div><div class="plates">${plates}</div><div class="bar-center"></div><div class="plates">${plates}</div><div class="sleeve"></div></div>`;
+}
+
+function renderSeriesList(series){
+  let html = '';
+  series.forEach(s=>{
+    html += `<div class="set-row"><span class="num">#${s.numero}</span>
+      <span class="num">${s.peso??'-'}kg</span> ×
+      <span class="num">${s.reps??'-'}</span> reps
+      ${s.cadencia?` · cad ${escapeHtml(s.cadencia)}`:''}
+      ${s.descanso?` · desc ${escapeHtml(String(s.descanso))}s`:''}
+    </div>`;
+  });
+  return html;
+}
+
+function goTab(name){
+  document.querySelector(`nav.tabbar button[data-tab="${name}"]`).click();
+}
+
+/* Registro de série via prompt-like inline form (modal simples) */
+function abrirRegistroSerie(cicloId, diaId, exercicioId, numero){
+  const ciclo = state.ciclos.find(c=>c.id===cicloId);
+  const dia = ciclo.dias.find(d=>d.id===diaId);
+  const ex = dia.exercicios.find(e=>e.id===exercicioId);
+  openSeriesModal({cicloId, diaId, exercicioId, exercicioNome: ex.nome, numero});
+}
+function abrirExercicioAvulso(cicloId, diaId){
+  const nome = prompt('Nome do exercício avulso:');
+  if(!nome) return;
+  openSeriesModal({cicloId, diaId, exercicioId: 'avulso-'+uid(), exercicioNome: nome, numero:1});
+}
+function abrirRegistroSerieAvulso(cicloId, diaId, exercicioId, nome, numero){
+  openSeriesModal({cicloId, diaId, exercicioId, exercicioNome: nome, numero});
+}
+
+let modalCtx = null;
+function openSeriesModal(ctx){
+  modalCtx = ctx;
+  document.getElementById('modal-title').textContent = `${ctx.exercicioNome} · Série ${ctx.numero}`;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('m-peso').value='';
+  document.getElementById('m-reps').value='';
+  document.getElementById('m-cadencia').value='';
+  document.getElementById('m-descanso').value='';
+  document.getElementById('m-peso').focus();
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); modalCtx=null; }
+
+async function salvarSerie(){
+  if(!modalCtx) return;
+  const peso = document.getElementById('m-peso').value;
+  const reps = document.getElementById('m-reps').value;
+  const cadencia = document.getElementById('m-cadencia').value.trim();
+  const descanso = document.getElementById('m-descanso').value;
+
+  let reg = state.registros.find(r=>r.cicloId===modalCtx.cicloId && r.diaId===modalCtx.diaId && r.exercicioId===modalCtx.exercicioId && r.data===todayISO());
+  if(!reg){
+    reg = {id:uid(), cicloId:modalCtx.cicloId, diaId:modalCtx.diaId, exercicioId:modalCtx.exercicioId, exercicio:modalCtx.exercicioNome, data:todayISO(), series:[]};
+    state.registros.push(reg);
+  }
+  reg.series.push({
+    numero: modalCtx.numero,
+    peso: peso!==''?Number(peso):null,
+    reps: reps!==''?Number(reps):null,
+    cadencia: cadencia||null,
+    descanso: descanso!==''?Number(descanso):null
+  });
+  await saveData('registros', state.registros);
+  closeModal();
+  toast('Série registrada');
+  renderTreino();
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/`/g,'&#96;'); }
+
+/* ================= PLANO ================= */
+function renderPlano(){
+  const wrap = document.getElementById('plano-content');
+  let html = '';
+
+  html += `<div class="card">
+    <h3>Novo ciclo de periodização</h3>
+    <label>Nome do ciclo</label>
+    <input type="text" id="novo-ciclo-nome" placeholder="Ex: Hipertrofia 12sem - Ago/26">
+    <label>Data de início</label>
+    <input type="date" id="novo-ciclo-data" value="${todayISO()}">
+    <button class="btn-primary" style="margin-top:12px;" onclick="criarCiclo()">Criar ciclo</button>
+  </div>`;
+
+  if(!state.ciclos.length){
+    html += `<div class="empty">Nenhum ciclo cadastrado ainda.</div>`;
+    wrap.innerHTML = html;
+    return;
+  }
+
+  state.ciclos.slice().reverse().forEach(ciclo=>{
+    html += `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">${escapeHtml(ciclo.nome)} ${ciclo.ativo?'<span class="badge">ativo</span>':''}</h3>
+      </div>
+      <div style="font-size:12px;color:var(--text-lo);margin-bottom:10px;">Início: ${fmtDate(ciclo.dataInicio)}</div>
+      <div class="row" style="margin-bottom:10px;">
+        ${!ciclo.ativo?`<button class="btn-secondary btn-small" onclick="ativarCiclo('${ciclo.id}')">Ativar</button>`:''}
+        <button class="btn-danger btn-small" onclick="removerCiclo('${ciclo.id}')">Excluir ciclo</button>
+      </div>
+      ${ciclo.dias.map(dia=>renderDiaPlano(ciclo, dia)).join('')}
+      <button class="btn-ghost" onclick="addDia('${ciclo.id}')">+ Adicionar dia</button>
+    </div>`;
+  });
+
+  wrap.innerHTML = html;
+}
+
+function renderDiaPlano(ciclo, dia){
+  let html = `<div class="exercise-block">
+    <div class="row" style="margin-bottom:8px;">
+      <input type="text" value="${escapeAttr(dia.nome)}" onchange="renomearDia('${ciclo.id}','${dia.id}', this.value)">
+      <button class="btn-danger btn-small" onclick="removerDia('${ciclo.id}','${dia.id}')">✕</button>
+    </div>`;
+  dia.exercicios.forEach(ex=>{
+    html += `<div class="set-row" style="align-items:center;">
+      <span style="flex:1;color:var(--text-hi);">${escapeHtml(ex.nome)}</span>
+      <span class="num" style="color:var(--text-lo);">${ex.seriesPrevistas||'?'}x${ex.repsPrevistas||'?'}</span>
+      <button class="btn-danger btn-small" onclick="removerExercicio('${ciclo.id}','${dia.id}','${ex.id}')">✕</button>
+    </div>`;
+  });
+  html += `<button class="btn-ghost btn-small" style="margin-top:8px;" onclick="addExercicio('${ciclo.id}','${dia.id}')">+ Exercício</button>
+  </div>`;
+  return html;
+}
+
+async function criarCiclo(){
+  const nome = document.getElementById('novo-ciclo-nome').value.trim();
+  const data = document.getElementById('novo-ciclo-data').value || todayISO();
+  if(!nome){ toast('Dê um nome ao ciclo'); return; }
+  state.ciclos.forEach(c=>c.ativo=false);
+  state.ciclos.push({id:uid(), nome, dataInicio:data, ativo:true, dias:[]});
+  await saveData('ciclos', state.ciclos);
+  document.getElementById('novo-ciclo-nome').value='';
+  toast('Ciclo criado');
+  init();
+}
+async function ativarCiclo(id){
+  state.ciclos.forEach(c=>c.ativo = c.id===id);
+  await saveData('ciclos', state.ciclos);
+  state.ui.treinoCicloId = id; state.ui.treinoDiaId = null;
+  renderPlano(); renderTreino();
+}
+async function removerCiclo(id){
+  if(!confirm('Excluir este ciclo e seu plano de dias/exercícios? Os registros já feitos continuam salvos no histórico.')) return;
+  state.ciclos = state.ciclos.filter(c=>c.id!==id);
+  await saveData('ciclos', state.ciclos);
+  init();
+}
+async function addDia(cicloId){
+  const ciclo = state.ciclos.find(c=>c.id===cicloId);
+  ciclo.dias.push({id:uid(), nome:'Novo dia', exercicios:[]});
+  await saveData('ciclos', state.ciclos);
+  renderPlano();
+}
+async function renomearDia(cicloId, diaId, novoNome){
+  const ciclo = state.ciclos.find(c=>c.id===cicloId);
+  const dia = ciclo.dias.find(d=>d.id===diaId);
+  dia.nome = novoNome.trim() || dia.nome;
+  await saveData('ciclos', state.ciclos);
+  renderTreino();
+}
+async function removerDia(cicloId, diaId){
+  if(!confirm('Remover esse dia do plano?')) return;
+  const ciclo = state.ciclos.find(c=>c.id===cicloId);
+  ciclo.dias = ciclo.dias.filter(d=>d.id!==diaId);
+  await saveData('ciclos', state.ciclos);
+  renderPlano(); renderTreino();
+}
+async function addExercicio(cicloId, diaId){
+  const nome = prompt('Nome do exercício:');
+  if(!nome) return;
+  const series = prompt('Séries previstas (ex: 4):', '3');
+  const reps = prompt('Repetições previstas (ex: 10 ou 8-12):', '10');
+  const ciclo = state.ciclos.find(c=>c.id===cicloId);
+  const dia = ciclo.dias.find(d=>d.id===diaId);
+  dia.exercicios.push({id:uid(), nome:nome.trim(), seriesPrevistas:Number(series)||null, repsPrevistas:reps||null});
+  await saveData('ciclos', state.ciclos);
+  renderPlano(); renderTreino();
+}
+async function removerExercicio(cicloId, diaId, exId){
+  const ciclo = state.ciclos.find(c=>c.id===cicloId);
+  const dia = ciclo.dias.find(d=>d.id===diaId);
+  dia.exercicios = dia.exercicios.filter(e=>e.id!==exId);
+  await saveData('ciclos', state.ciclos);
+  renderPlano(); renderTreino();
+}
+
+/* ================= PERFIL / ANAMNESE ================= */
+function renderPerfil(){
+  const wrap = document.getElementById('perfil-content');
+  const ultima = state.anamnese[state.anamnese.length-1];
+  const sexoAtual = ultima ? ultima.sexo : 'F';
+
+  let html = `<div class="card">
+    <h3>Nova medição</h3>
+    <label>Sexo (define o rótulo de "Peitoral/Busto")</label>
+    <div class="seg" id="seg-sexo">
+      <button data-sexo="F" class="${sexoAtual==='F'?'active':''}">Feminino</button>
+      <button data-sexo="M" class="${sexoAtual==='M'?'active':''}">Masculino</button>
+    </div>
+    <label>Data</label>
+    <input type="date" id="anam-data" value="${todayISO()}">
+    <label>Ciclo relacionado <span class="field-optional-tag">(opcional)</span></label>
+    <select id="anam-ciclo">
+      <option value="">Nenhum / geral</option>
+      ${state.ciclos.map(c=>`<option value="${c.id}" ${c.ativo?'selected':''}>${escapeHtml(c.nome)}</option>`).join('')}
+    </select>
+    <div id="anam-fields"></div>
+    <button class="btn-primary" style="margin-top:14px;" onclick="salvarAnamnese()">Salvar medição</button>
+  </div>`;
+
+  html += `<div class="card">
+    <h3>Histórico</h3>
+    ${state.anamnese.length ? renderHistoricoAnamnese() : '<div class="empty">Nenhuma medição registrada ainda.</div>'}
+  </div>`;
+
+  html += `<div class="card">
+    <h3>Backup dos dados</h3>
+    <div style="font-size:12px;color:var(--text-lo);margin-bottom:10px;">Os dados ficam salvos só neste Safari/aparelho. Exporte de vez em quando para não perder nada se limpar o navegador ou trocar de celular.</div>
+    <div class="row">
+      <button class="btn-secondary" onclick="exportarBackup()">Exportar (.json)</button>
+      <button class="btn-secondary" onclick="document.getElementById('input-import').click()">Importar</button>
+    </div>
+    <input type="file" id="input-import" accept="application/json" style="display:none;" onchange="importarBackup(this.files[0])">
+  </div>`;
+
+  wrap.innerHTML = html;
+  renderCamposAnamnese(sexoAtual);
+
+  document.querySelectorAll('#seg-sexo button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#seg-sexo button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      renderCamposAnamnese(b.dataset.sexo);
+    });
+  });
+}
+
+function renderCamposAnamnese(sexo){
+  const box = document.getElementById('anam-fields');
+  let html = '';
+  MEDIDAS.forEach(m=>{
+    let label = m.label;
+    if(m.k==='peitoral') label = sexo==='M' ? 'Peitoral' : 'Busto';
+    html += `<label>${label} <span class="field-optional-tag">(opcional, ${m.unit})</span></label>
+      <input type="number" inputmode="decimal" step="0.1" id="af-${m.k}" placeholder="${m.unit}">`;
+  });
+  box.innerHTML = html;
+}
+
+async function salvarAnamnese(){
+  const sexo = document.querySelector('#seg-sexo button.active').dataset.sexo;
+  const data = document.getElementById('anam-data').value || todayISO();
+  const cicloId = document.getElementById('anam-ciclo').value || null;
+  const cicloObj = state.ciclos.find(c=>c.id===cicloId);
+  const campos = {};
+  MEDIDAS.forEach(m=>{
+    const v = document.getElementById('af-'+m.k).value;
+    if(v!=='') campos[m.k] = Number(v);
+  });
+  if(Object.keys(campos).length===0){ toast('Preencha ao menos uma medida'); return; }
+  state.anamnese.push({id:uid(), data, sexo, cicloId, cicloNome: cicloObj?cicloObj.nome:null, campos});
+  state.anamnese.sort((a,b)=> a.data.localeCompare(b.data));
+  await saveData('anamnese', state.anamnese);
+  toast('Medição salva');
+  renderPerfil();
+  renderEvolucao();
+}
+
+function renderHistoricoAnamnese(){
+  const rows = state.anamnese.slice().reverse().map(a=>{
+    const peso = a.campos.peso ? a.campos.peso+'kg' : '-';
+    const altura = a.campos.altura ? a.campos.altura+'cm' : '-';
+    return `<tr><td>${fmtDate(a.data)}</td><td>${peso}</td><td>${altura}</td><td>${a.cicloNome?escapeHtml(a.cicloNome):'-'}</td>
+      <td><button class="btn-danger btn-small" onclick="removerAnamnese('${a.id}')">✕</button></td></tr>`;
+  }).join('');
+  return `<table class="hist"><thead><tr><th>Data</th><th>Peso</th><th>Altura</th><th>Ciclo</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+async function removerAnamnese(id){
+  if(!confirm('Remover essa medição?')) return;
+  state.anamnese = state.anamnese.filter(a=>a.id!==id);
+  await saveData('anamnese', state.anamnese);
+  renderPerfil(); renderEvolucao();
+}
+
+/* ================= EVOLUÇÃO ================= */
+function renderEvolucao(){
+  const wrap = document.getElementById('evolucao-content');
+  let html = `<div class="card">
+    <h3>Carga por exercício</h3>
+    <select id="ev-exercicio"></select>
+    <div class="chart-wrap" id="ev-chart-ex"></div>
+  </div>
+  <div class="card">
+    <h3>Medida corporal</h3>
+    <select id="ev-medida">
+      ${MEDIDAS.map(m=>`<option value="${m.k}">${m.label}</option>`).join('')}
+    </select>
+    <div class="chart-wrap" id="ev-chart-medida"></div>
+  </div>`;
+  wrap.innerHTML = html;
+
+  const nomes = [...new Set(state.registros.map(r=>r.exercicio))].sort();
+  const selEx = document.getElementById('ev-exercicio');
+  if(!nomes.length){
+    document.getElementById('ev-chart-ex').innerHTML = '<div class="empty">Ainda sem registros de treino.</div>';
+    selEx.innerHTML = '<option>—</option>';
+    selEx.disabled = true;
+  } else {
+    selEx.innerHTML = nomes.map(n=>`<option value="${escapeAttr(n)}">${escapeHtml(n)}</option>`).join('');
+    selEx.addEventListener('change', ()=>drawExercicioChart(selEx.value));
+    drawExercicioChart(nomes[0]);
+  }
+
+  const selMed = document.getElementById('ev-medida');
+  selMed.addEventListener('change', ()=>drawMedidaChart(selMed.value));
+  drawMedidaChart('peso');
+}
+
+function drawExercicioChart(nome){
+  const pontos = state.registros
+    .filter(r=>r.exercicio===nome)
+    .map(r=>{
+      const cargaMax = Math.max(0, ...r.series.map(s=>s.peso||0));
+      return {data:r.data, valor:cargaMax};
+    })
+    .filter(p=>p.valor>0)
+    .sort((a,b)=>a.data.localeCompare(b.data));
+  document.getElementById('ev-chart-ex').innerHTML = drawLineChart(pontos, 'kg');
+}
+function drawMedidaChart(campo){
+  const pontos = state.anamnese
+    .filter(a=>a.campos[campo]!==undefined)
+    .map(a=>({data:a.data, valor:a.campos[campo]}))
+    .sort((a,b)=>a.data.localeCompare(b.data));
+  document.getElementById('ev-chart-medida').innerHTML = drawLineChart(pontos, MEDIDAS.find(m=>m.k===campo)?.unit || '');
+}
+
+function drawLineChart(pontos, unidade){
+  if(pontos.length < 2){
+    return `<div class="empty">${pontos.length===0?'Sem dados ainda.':'Precisa de ao menos 2 registros para o gráfico.'}</div>`;
+  }
+  const W=300,H=150,padL=34,padR=10,padT=10,padB=20;
+  const vals = pontos.map(p=>p.valor);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const range = (max-min)||1;
+  const x = i => padL + (i/(pontos.length-1))*(W-padL-padR);
+  const y = v => padT + (1-((v-min)/range))*(H-padT-padB);
+  const path = pontos.map((p,i)=> `${i===0?'M':'L'}${x(i).toFixed(1)},${y(p.valor).toFixed(1)}`).join(' ');
+  const dots = pontos.map((p,i)=>`<circle class="chart-dot" cx="${x(i).toFixed(1)}" cy="${y(p.valor).toFixed(1)}" r="3"></circle>`).join('');
+  const firstLabel = fmtDate(pontos[0].data);
+  const lastLabel = fmtDate(pontos[pontos.length-1].data);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <line class="grid-line" x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}"/>
+    <line class="grid-line" x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}"/>
+    <text class="chart-label" x="0" y="${padT+6}">${max}${unidade}</text>
+    <text class="chart-label" x="0" y="${H-padB}">${min}${unidade}</text>
+    <path class="chart-line" d="${path}"></path>
+    ${dots}
+    <text class="chart-label" x="${padL}" y="${H-3}">${firstLabel}</text>
+    <text class="chart-label" x="${W-padR-30}" y="${H-3}">${lastLabel}</text>
+  </svg>`;
+}
+
+/* ================= Modal (registro de série) ================= */
+document.body.insertAdjacentHTML('beforeend', `
+<div id="modal" class="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:flex-end;z-index:100;">
+  <div style="background:var(--surface);width:100%;max-width:520px;margin:0 auto;border-radius:20px 20px 0 0;padding:18px 16px calc(20px + var(--safe-bottom));">
+    <h3 id="modal-title" style="margin:0 0 12px;font-size:15px;color:var(--text-hi);text-transform:none;letter-spacing:0;font-family:'Oswald',sans-serif;text-transform:uppercase;"></h3>
+    <div class="row">
+      <div><label>Peso (kg)</label><input type="number" inputmode="decimal" id="m-peso"></div>
+      <div><label>Reps</label><input type="number" inputmode="numeric" id="m-reps"></div>
+    </div>
+    <div class="row">
+      <div><label>Cadência</label><input type="text" id="m-cadencia" placeholder="ex: 2-0-2"></div>
+      <div><label>Descanso (s)</label><input type="number" inputmode="numeric" id="m-descanso"></div>
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="salvarSerie()">Salvar série</button>
+    </div>
+  </div>
+</div>
+<style>#modal.open{display:flex !important;}</style>
+`);
+
+function exportarBackup(){
+  const backup = {ciclos: state.ciclos, registros: state.registros, anamnese: state.anamnese, exportadoEm: new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup-treino-${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup exportado');
+}
+function importarBackup(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!confirm('Importar esse backup vai substituir todos os dados atuais no aparelho. Continuar?')) return;
+      state.ciclos = data.ciclos || [];
+      state.registros = data.registros || [];
+      state.anamnese = data.anamnese || [];
+      await saveData('ciclos', state.ciclos);
+      await saveData('registros', state.registros);
+      await saveData('anamnese', state.anamnese);
+      toast('Backup importado');
+      init();
+    }catch(err){
+      alert('Arquivo inválido. Verifique se é o .json exportado pelo próprio app.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+init();
+</script>
+</body>
+</html>
